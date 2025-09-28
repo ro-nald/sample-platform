@@ -12,7 +12,45 @@ on:
           - info
           - warning
           - debug
-      environment:
+      targetEnvironment:
         description: 'Environment to deploy to'
         required: true
         type: environment
+
+jobs:
+  # 1. Job to check and process the manual inputs
+  process_inputs:
+    runs-on: ubuntu-latest  # You can use windows-latest if needed
+
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Run PowerShell Script to Process Inputs
+        # The 'pwsh' shell is used for cross-platform PowerShell Core
+        shell: pwsh
+        run: |
+          $logLevel = "${{ github.event.inputs.logLevel }}"
+          $environment = "${{ github.event.inputs.targetEnvironment }}"
+          
+          Write-Host "--- Workflow Dispatch Inputs ---"
+          Write-Host "Log Level: $logLevel"
+          Write-Host "Target Environment: $environment"
+          
+          if ($environment -eq "Prod") {
+              Write-Warning "🛑 WARNING: Running against Production environment!"
+              # You can add logic here, e.g., prompt for confirmation or check a required secret
+          }
+          
+          # Example of using a choice input for logic
+          if ($logLevel -eq "debug") {
+              Write-Host "Setting debug flag for subsequent steps..."
+          }
+
+  # 2. A placeholder job demonstrating a simple build
+  simple_build_job:
+    needs: [process_inputs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy Build Step
+        run: echo "Build process completed successfully."
